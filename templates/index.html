@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công cụ Tìm kiếm Sản phẩm</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a3c5e 0%, #2c5a7a 100%);
+            color: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .header p {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        /* Container chính */
+        .container {
+            flex: 1;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+        
+        /* Card tìm kiếm */
+        .search-card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .search-card h2 {
+            text-align: center;
+            color: #1a3c5e;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+        
+        .search-card .sub {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+        
+        /* Ô tìm kiếm */
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            outline: none;
+            transition: 0.3s;
+        }
+        
+        .search-box input:focus {
+            border-color: #2c5a7a;
+        }
+        
+        .search-box button {
+            padding: 15px 30px;
+            background: #2c5a7a;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        
+        .search-box button:hover {
+            background: #1a3c5e;
+        }
+        
+        /* Gợi ý tìm kiếm */
+        .suggestions {
+            margin-top: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            border: 1px solid #ddd;
+        }
+        
+        .suggestion-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: 0.2s;
+        }
+        
+        .suggestion-item:hover {
+            background: #f0f2f5;
+        }
+        
+        /* Link phụ */
+        .links {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.85rem;
+        }
+        
+        .links a {
+            color: #2c5a7a;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        
+        .links a:hover {
+            text-decoration: underline;
+        }
+        
+        .separator {
+            color: #ccc;
+        }
+        
+        /* Thông tin công nghệ */
+        .info {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e8f0f7;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .info p {
+            color: #1a3c5e;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .badges {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .badge {
+            background: white;
+            color: #2c5a7a;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-size: 0.75rem;
+            border-top: 1px solid #ddd;
+            margin-top: 50px;
+        }
+        
+        @media (max-width: 600px) {
+            .search-card {
+                padding: 25px;
+            }
+            
+            .search-box {
+                flex-direction: column;
+            }
+            
+            .search-box button {
+                width: 100%;
+            }
+            
+            .badges {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Công Cụ Tra Cứu Dữ Liệu</h1>
+        <p> Hệ thống được phát triển với Python Backend và PostgreSQL</p>
+    </div>
+    
+    <div class="container">
+        <div class="search-card">
+            <h2>Tìm kiếm sản phẩm thông minh</h2>
+            <div class="sub">Chỉ cần nhập tên sản phẩm - AI sẽ tự tìm kiếm thông minh</div>
+            
+            <form action="/search" method="GET" id="searchForm">
+                <div class="search-box">
+                    <input type="text" 
+                           name="ten_hang" 
+                           id="searchInput"
+                           placeholder="Tìm kiếm tên hoặc mô tả sản phẩm..." 
+                           autocomplete="off"
+                           required>
+                    <button type="submit">Tìm kiếm</button>
+                </div>
+            </form>
+            
+            <div id="suggestions" class="suggestions"></div>
+            
+            <div class="links">
+                <a href="#">Lịch sử tìm kiếm</a>
+                <span class="separator">|</span>
+                <a href="#">Tìm kiếm nâng cao</a>
+            </div>
+        </div>
+        
+        <div class="info">
+            <p>⚡ Sử dụng AI BGE-M3 | Hiểu ngữ nghĩa tiếng Việt</p>
+            <div class="badges">
+                <span class="badge">📝 Từ ngắn (<3 từ) → Tìm chính xác tên sản phẩm</span>
+                <span class="badge">🚀 Từ dài (≥3 từ) → Tìm thông minh cả tên + mô tả</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>© Version 2026  - Thử nghiệm nội bộ</p>
+    </div>
+    
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const suggestionsDiv = document.getElementById('suggestions');
+        let debounceTimer;
+        
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const keyword = this.value.trim();
+            
+            if (keyword.length < 2) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            
+            debounceTimer = setTimeout(() => {
+                fetch(`/get_suggestions?keyword=${encodeURIComponent(keyword)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            suggestionsDiv.innerHTML = data.map(item => 
+                                `<div class="suggestion-item" onclick="selectSuggestion('${item.ten_hang.replace(/'/g, "\\'")}')">
+                                    📦 ${item.ten_hang}
+                                </div>`
+                            ).join('');
+                            suggestionsDiv.style.display = 'block';
+                        } else {
+                            suggestionsDiv.style.display = 'none';
+                        }
+                    });
+            }, 300);
+        });
+        
+        function selectSuggestion(text) {
+            searchInput.value = text;
+            suggestionsDiv.style.display = 'none';
+            document.getElementById('searchForm').submit();
+        }
+        
+        document.addEventListener('click', function(e) {
+            if (e.target !== searchInput && !suggestionsDiv.contains(e.target)) {
+                suggestionsDiv.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

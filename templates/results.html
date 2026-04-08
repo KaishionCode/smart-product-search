@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả tìm kiếm</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a3c5e 0%, #2c5a7a 100%);
+            color: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .header p {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        /* Container chính */
+        .container {
+            flex: 1;
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        /* Card kết quả */
+        .results-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        /* Thanh tìm kiếm lại */
+        .search-bar {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .search-bar .search-box {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-bar input {
+            flex: 1;
+            padding: 12px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+        }
+        
+        .search-bar input:focus {
+            border-color: #2c5a7a;
+        }
+        
+        .search-bar button {
+            padding: 12px 20px;
+            background: #2c5a7a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .search-bar button:hover {
+            background: #1a3c5e;
+            transform: translateY(-1px);
+        }
+        
+        /* Thống kê */
+        .stats-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e4e8;
+            margin-bottom: 20px;
+        }
+        
+        .stats {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .stats .keyword {
+            font-size: 1rem;
+            color: #555;
+        }
+        
+        .stats .keyword strong {
+            color: #2c5a7a;
+            font-size: 1.1rem;
+            background: #e8f0f7;
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
+        
+        .stats .count {
+            background: #2c5a7a;
+            color: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+        
+        /* --- CSS MỚI CHO TÍNH NĂNG ĐÓNG/MỞ BỘ LỌC --- */
+        .filter-wrapper {
+            margin-bottom: 20px;
+        }
+        
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #e8f0f7;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            color: #2c5a7a;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+        
+        .filter-header:hover {
+            background: #d4e3f0;
+        }
+
+        .filter-header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-toggle-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .filter-toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        /* Container chứa các nút sẽ được thu gọn */
+        .filter-content {
+            max-height: 500px; /* Chiều cao tối đa đủ lớn để chứa các nút */
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, margin-top 0.3s ease-in-out;
+            opacity: 1;
+            margin-top: 10px;
+        }
+
+        .filter-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+        }
+
+        /* Bộ lọc điểm dạng nút */
+        .filter-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            background: #f8f9fa;
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-bottom: 0; /* Đã sửa đổi so với code cũ */
+        }
+        
+        .filter-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            background: white;
+            color: #555;
+            border: 1px solid #ddd;
+        }
+        
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .filter-btn.active {
+            background: #2c5a7a;
+            color: white;
+            border-color: #2c5a7a;
+        }
+        
+        .filter-btn.high {
+            border-left: 4px solid #27ae60;
+        }
+        
+        .filter-btn.high.active {
+            background: #27ae60;
+            border-color: #27ae60;
+        }
+        
+        .filter-btn.medium {
+            border-left: 4px solid #f39c12;
+        }
+        
+        .filter-btn.medium.active {
+            background: #f39c12;
+            border-color: #f39c12;
+        }
+        
+        .filter-btn.low {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .filter-btn.low.active {
+            background: #e74c3c;
+            border-color: #e74c3c;
+        }
+        
+        .filter-btn.very-low {
+            border-left: 4px solid #95a5a6;
+        }
+        
+        .filter-btn.very-low.active {
+            background: #95a5a6;
+            border-color: #95a5a6;
+        }
+        
+        .filter-btn.all {
+            border-left: 4px solid #2c5a7a;
+        }
+        
+        /* Bảng kết quả */
+        .results-table {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            text-align: left;
+            padding: 12px 10px;
+            background: #f8f9fa;
+            color: #1a3c5e;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-bottom: 2px solid #e0e4e8;
+        }
+        
+        /* Căn phải cho cột giá */
+        th:nth-child(4),
+        td:nth-child(4) {
+            text-align: right;
+        }
+        
+        /* Căn giữa cho cột điểm */
+        th:nth-child(5),
+        td:nth-child(5) {
+            text-align: center;
+        }
+        
+        td {
+            padding: 15px 10px;
+            border-bottom: 1px solid #e0e4e8;
+            vertical-align: top;
+        }
+        
+        /* Thu hẹp cột STT */
+        td:first-child, th:first-child {
+            width: 50px;
+            text-align: center;
+            font-weight: 600;
+            color: #666;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* Tên sản phẩm với nút xem thêm */
+        .product-name {
+            font-weight: 600;
+            color: #1a3c5e;
+            word-break: break-word;
+        }
+        
+        .product-name-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .product-name-text {
+            flex: 1;
+        }
+        
+        .product-name-full {
+            display: none;
+        }
+        
+        .product-name.expanded .product-name-preview {
+            display: none;
+        }
+        
+        .product-name.expanded .product-name-full {
+            display: inline;
+        }
+        
+        .toggle-name-btn {
+            background: none;
+            border: none;
+            color: #2c5a7a;
+            cursor: pointer;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            text-decoration: underline;
+            white-space: nowrap;
+        }
+        
+        .toggle-name-btn:hover {
+            background: #e8f0f7;
+        }
+        
+        /* Style cho thông số kỹ thuật */
+        .product-spec {
+            color: #666;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            word-break: break-word;
+            max-width: 450px;
+            position: relative;
+        }
+        
+        .spec-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .spec-content {
+            flex: 1;
+        }
+        
+        .spec-preview {
+            display: inline;
+        }
+        
+        .spec-full {
+            display: none;
+        }
+        
+        .product-spec.expanded .spec-preview {
+            display: none;
+        }
+        
+        .product-spec.expanded .spec-full {
+            display: inline;
+        }
+        
+        /* Tooltip style */
+        .spec-tooltip {
+            visibility: hidden;
+            position: absolute;
+            background: #2c3e50;
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            max-width: 450px;
+            width: max-content;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: normal;
+            word-wrap: break-word;
+            z-index: 1000;
+            bottom: 125%;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            pointer-events: none;
+        }
+        
+        .product-spec:hover .spec-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* Nút chi tiết */
+        .detail-btn, .toggle-spec-btn {
+            background: none;
+            border: none;
+            color: #2c5a7a;
+            cursor: pointer;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            text-decoration: underline;
+            white-space: nowrap;
+        }
+        
+        .detail-btn:hover, .toggle-spec-btn:hover {
+            background: #e8f0f7;
+            transform: translateX(2px);
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #1a3c5e 0%, #2c5a7a 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .close:hover {
+            transform: scale(1.1);
+        }
+        
+        .modal-body {
+            padding: 25px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .modal-body h4 {
+            color: #1a3c5e;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+        
+        .modal-spec {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            line-height: 1.6;
+            font-size: 14px;
+            color: #555;
+            white-space: pre-wrap;
+        }
+        
+        .modal-price {
+            font-size: 1.2rem;
+            color: #e67e22;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .product-price {
+            color: #e67e22;
+            font-weight: 600;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+        
+        .score-cell {
+            text-align: center;
+        }
+        
+        .score-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            min-width: 65px;
+        }
+        
+        /* Màu sắc theo điểm */
+        .score-high {
+            background: #27ae60;
+            color: white;
+            box-shadow: 0 2px 5px rgba(39, 174, 96, 0.3);
+        }
+        
+        .score-medium {
+            background: #f39c12;
+            color: white;
+            box-shadow: 0 2px 5px rgba(243, 156, 18, 0.3);
+        }
+        
+        .score-low {
+            background: #e74c3c;
+            color: white;
+            box-shadow: 0 2px 5px rgba(231, 76, 60, 0.3);
+        }
+        
+        .score-very-low {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        /* Không có kết quả */
+        .no-results {
+            text-align: center;
+            padding: 50px 20px;
+        }
+        
+        .no-results p {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .no-results .suggestion-tip {
+            color: #999;
+            font-size: 0.85rem;
+        }
+        
+        /* Badge công nghệ */
+        .tech-badge {
+            display: inline-block;
+            background: #e8f0f7;
+            color: #2c5a7a;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            margin-top: 15px;
+        }
+        
+        .badges {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-size: 0.75rem;
+            border-top: 1px solid #ddd;
+            margin-top: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .results-card {
+                padding: 20px;
+            }
+            
+            .search-bar {
+                flex-direction: column;
+            }
+            
+            .search-bar .search-box {
+                width: 100%;
+            }
+            
+            .stats-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-buttons {
+                justify-content: center;
+            }
+            
+            .filter-btn {
+                padding: 6px 15px;
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 10px 6px;
+            }
+            
+            .product-spec {
+                max-width: 200px;
+            }
+            
+            .modal-content {
+                margin: 10% auto;
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Công Cụ Tra Cứu Dữ Liệu</h1>
+        <p>Hệ thống được phát triển với Python Backend và PostgreSQL</p>
+    </div>
+    
+    <div class="container">
+        <div class="results-card">
+            <div class="search-bar">
+                <form action="/search" method="GET" style="flex: 1; display: flex; gap: 10px;">
+                    <div class="search-box">
+                        <input type="text" 
+                               name="ten_hang" 
+                               id="searchInput"
+                               value="{{ request.args.get('ten_hang', '') }}"
+                               placeholder="Tìm kiếm tên hoặc mô tả sản phẩm..." 
+                               autocomplete="off">
+                        <button type="submit">
+                            🔍 Tìm kiếm
+                        </button>
+                    </div>
+                </form>
+                <a href="/" style="color: #2c5a7a; text-decoration: none; white-space: nowrap;">← Trang chủ</a>
+            </div>
+            
+            {% if hang_hoa %}
+            <div class="stats-section">
+                <div class="stats">
+                    <div class="keyword">
+                        📋 Từ khóa: <strong>"{{ request.args.get('ten_hang', '') }}"</strong>
+                    </div>
+                    <div class="count" id="totalCount">
+                        🎯 {{ hang_hoa|length }} kết quả
+                    </div>
+                </div>
+            </div>
+            
+            <div class="filter-wrapper">
+                <div class="filter-header" onclick="toggleFilterPanel()">
+                    <div class="filter-header-title">
+                        <span>🛠️ Bộ lọc theo điểm tương đồng</span>
+                    </div>
+                    <span class="filter-toggle-icon" id="filterIcon">▼</span>
+                </div>
+                
+                <div class="filter-content" id="filterContent">
+                    <div class="filter-buttons">
+                        <button class="filter-btn all active" data-filter="all" onclick="filterByScore('all')">
+                            📊 Tất cả ({{ hang_hoa|length }})
+                        </button>
+                        <button class="filter-btn high" data-filter="high" onclick="filterByScore('high')">
+                            🟢 Rất phù hợp (≥0.7)
+                        </button>
+                        <button class="filter-btn medium" data-filter="medium" onclick="filterByScore('medium')">
+                            🟠 Phù hợp (0.5-0.7)
+                        </button>
+                        <button class="filter-btn low" data-filter="low" onclick="filterByScore('low')">
+                            🔴 Ít phù hợp (0.3-0.5)
+                        </button>
+                        <button class="filter-btn very-low" data-filter="very-low" onclick="filterByScore('very-low')">
+                            ⚪ Không phù hợp (<0.3)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="results-table">
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Thông số kỹ thuật</th>
+                            <th>Giá (VNĐ)</th>
+                            <th>Điểm</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        {% for item in hang_hoa %}
+                        {% set score = item.final_score if item.final_score is not none else (item.do_tuong_dong if item.do_tuong_dong is not none else 0) %}
+                        {% set score_class = 'high' if score >= 0.7 else ('medium' if score >= 0.5 else ('low' if score >= 0.3 else 'very-low')) %}
+                        <tr data-score="{{ score }}" data-score-class="{{ score_class }}">
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <div class="product-name" id="product-{{ loop.index }}">
+                                    <div class="product-name-wrapper">
+                                        <span class="product-name-text">
+                                            <span class="product-name-preview">
+                                                {% if item.ten_hang|length > 50 %}
+                                                    {{ item.ten_hang[:50] }}...
+                                                {% else %}
+                                                    {{ item.ten_hang }}
+                                                {% endif %}
+                                            </span>
+                                            <span class="product-name-full">{{ item.ten_hang }}</span>
+                                        </span>
+                                        {% if item.ten_hang|length > 50 %}
+                                        <button class="toggle-name-btn" onclick="toggleProductName({{ loop.index }})">
+                                            📖 Xem thêm
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="product-spec" id="spec-{{ loop.index }}">
+                                    <div class="spec-wrapper">
+                                        <div class="spec-content">
+                                            {% if item.thong_so %}
+                                                <span class="spec-preview">
+                                                    {% if item.thong_so|length > 100 %}
+                                                        {{ item.thong_so[:100] }}...
+                                                    {% else %}
+                                                        {{ item.thong_so }}
+                                                    {% endif %}
+                                                </span>
+                                                <span class="spec-full">{{ item.thong_so }}</span>
+                                                <span class="spec-tooltip">
+                                                    <strong>📋 Thông số chi tiết:</strong><br>
+                                                    {{ item.thong_so }}
+                                                </span>
+                                                {% if item.thong_so|length > 100 %}
+                                                <button class="toggle-spec-btn" onclick="toggleSpec({{ loop.index }})">
+                                                    📖 Xem thêm
+                                                </button>
+                                                {% endif %}
+                                                <button class="detail-btn" 
+                                                        data-product-name="{{ item.ten_hang|replace('"', '&quot;') }}" 
+                                                        data-spec-content="{{ item.thong_so|replace('"', '&quot;')|replace('\n', '\\n')|replace('\r', '') }}"
+                                                        data-price="{{ item.gia_tham_dinh if item.gia_tham_dinh else 0 }}"
+                                                        onclick="showDetailModal(this)">
+                                                    🔍 Chi tiết
+                                                </button>
+                                            {% else %}
+                                                <em style="color: #999;">Không có mô tả</em>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="product-price">
+                                {% if item.gia_tham_dinh %}
+                                    {{ "{:,.0f}".format(item.gia_tham_dinh) }} ₫
+                                {% else %}
+                                    <span style="color: #999;">---</span>
+                                {% endif %}
+                            </td>
+                            <td class="score-cell">
+                                {% if score >= 0.7 %}
+                                    <span class="score-badge score-high">🟢 {{ "%.3f"|format(score) }}</span>
+                                {% elif score >= 0.5 %}
+                                    <span class="score-badge score-medium">🟠 {{ "%.3f"|format(score) }}</span>
+                                {% elif score >= 0.3 %}
+                                    <span class="score-badge score-low">🔴 {{ "%.3f"|format(score) }}</span>
+                                {% else %}
+                                    <span class="score-badge score-very-low">⚪ {{ "%.3f"|format(score) }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <span class="tech-badge">⚡ Sử dụng AI BGE-M3 | Hybrid Search</span>
+            </div>
+            
+            {% else %}
+            <div class="no-results">
+                <p>😔 Không tìm thấy sản phẩm nào phù hợp với "<strong>{{ request.args.get('ten_hang', '') }}</strong>"</p>
+                <p class="suggestion-tip">💡 Gợi ý: Hãy thử tìm với từ khóa ngắn gọn hơn hoặc kiểm tra lại chính tả</p>
+                <div class="badges">
+                    <span class="tech-badge">📝 Từ ngắn (1-2 từ) → Tìm chính xác tên sản phẩm</span>
+                    <span class="tech-badge">🚀 Từ dài (≥3 từ) → Tìm thông minh cả tên + mô tả</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>© Version 2026 - Thử nghiệm nội bộ</p>
+    </div>
+    
+    <div id="specModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📋 Chi tiết sản phẩm</h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <h4 id="modalProductName"></h4>
+                <div id="modalPrice" class="modal-price"></div>
+                <div id="modalSpecContent" class="modal-spec"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Lưu trữ tất cả các dòng
+        const allRows = document.querySelectorAll('#tableBody tr');
+        let currentFilter = 'all';
+        
+        // Hàm lọc theo điểm
+        function filterByScore(type) {
+            currentFilter = type;
+            
+            // Cập nhật active class cho nút
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.filter-btn.${type}`).classList.add('active');
+            
+            let visibleCount = 0;
+            let counts = {
+                high: 0,
+                medium: 0,
+                low: 0,
+                'very-low': 0
+            };
+            
+            // Đếm số lượng từng loại
+            allRows.forEach(row => {
+                const scoreClass = row.getAttribute('data-score-class');
+                if (scoreClass) {
+                    counts[scoreClass]++;
+                }
+            });
+            
+            // Lọc và đếm số hiển thị
+            allRows.forEach(row => {
+                const scoreClass = row.getAttribute('data-score-class');
+                
+                if (type === 'all') {
+                    row.style.display = '';
+                    visibleCount++;
+                } else if (scoreClass === type) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Cập nhật số lượng hiển thị
+            const totalCountSpan = document.getElementById('totalCount');
+            if (totalCountSpan) {
+                totalCountSpan.innerHTML = `🎯 ${visibleCount} / ${allRows.length} kết quả`;
+            }
+            
+            // Cập nhật số lượng trên các nút
+            if (document.querySelector('.filter-btn.all')) {
+                document.querySelector('.filter-btn.all').innerHTML = `📊 Tất cả (${allRows.length})`;
+                document.querySelector('.filter-btn.high').innerHTML = `🟢 Rất phù hợp (${counts.high || 0})`;
+                document.querySelector('.filter-btn.medium').innerHTML = `🟠 Phù hợp (${counts.medium || 0})`;
+                document.querySelector('.filter-btn.low').innerHTML = `🔴 Ít phù hợp (${counts.low || 0})`;
+                document.querySelector('.filter-btn.very-low').innerHTML = `⚪ Không phù hợp (${counts['very-low'] || 0})`;
+            }
+            
+            // Hiển thị thông báo nếu không có kết quả
+            if (visibleCount === 0) {
+                const tableBody = document.getElementById('tableBody');
+                if (tableBody) {
+                    let noResultRow = document.getElementById('noResultRow');
+                    
+                    if (!noResultRow) {
+                        noResultRow = document.createElement('tr');
+                        noResultRow.id = 'noResultRow';
+                        tableBody.appendChild(noResultRow);
+                    }
+                    
+                    noResultRow.style.display = '';
+                    noResultRow.innerHTML = `
+                        <td colspan="5" style="text-align: center; padding: 40px;">
+                            😔 Không có sản phẩm nào trong nhóm này
+                            <br><small style="color: #999;">Hãy thử chọn nhóm khác</small>
+                        </td>
+                    `;
+                }
+            } else {
+                const noResultRow = document.getElementById('noResultRow');
+                if (noResultRow) {
+                    noResultRow.style.display = 'none';
+                }
+            }
+        }
+
+        // Hàm đóng/mở panel bộ lọc
+        function toggleFilterPanel() {
+            const content = document.getElementById('filterContent');
+            const icon = document.getElementById('filterIcon');
+            
+            content.classList.toggle('collapsed');
+            icon.classList.toggle('collapsed');
+        }
+        
+        // Hàm toggle tên sản phẩm
+        function toggleProductName(index) {
+            const productDiv = document.getElementById(`product-${index}`);
+            productDiv.classList.toggle('expanded');
+            const btn = productDiv.querySelector('.toggle-name-btn');
+            if (productDiv.classList.contains('expanded')) {
+                btn.innerHTML = '📖 Thu gọn';
+            } else {
+                btn.innerHTML = '📖 Xem thêm';
+            }
+        }
+        
+        // Hàm toggle thông số
+        function toggleSpec(index) {
+            const specDiv = document.getElementById(`spec-${index}`);
+            specDiv.classList.toggle('expanded');
+            const btn = specDiv.querySelector('.toggle-spec-btn');
+            if (specDiv.classList.contains('expanded')) {
+                btn.innerHTML = '📖 Thu gọn';
+            } else {
+                btn.innerHTML = '📖 Xem thêm';
+            }
+        }
+        
+        // Modal functions
+        function showDetailModal(button) {
+            const productName = button.getAttribute('data-product-name');
+            const specContent = button.getAttribute('data-spec-content');
+            const price = button.getAttribute('data-price');
+            
+            document.getElementById('modalProductName').innerHTML = '📦 ' + productName;
+            if (price && price !== '0') {
+                const formattedPrice = new Intl.NumberFormat('vi-VN').format(price);
+                document.getElementById('modalPrice').innerHTML = `💰 Giá: ${formattedPrice} ₫`;
+                document.getElementById('modalPrice').style.display = 'block';
+            } else {
+                document.getElementById('modalPrice').style.display = 'none';
+            }
+            document.getElementById('modalSpecContent').innerHTML = specContent.replace(/\\n/g, '<br>');
+            document.getElementById('specModal').style.display = 'block';
+        }
+        
+        function closeModal() {
+            document.getElementById('specModal').style.display = 'none';
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('specModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // Gợi ý tìm kiếm
+        const searchInput = document.getElementById('searchInput');
+        let debounceTimer;
+        
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const keyword = this.value.trim();
+                
+                if (keyword.length < 2) {
+                    return;
+                }
+                
+                debounceTimer = setTimeout(() => {
+                    fetch(`/get_suggestions?keyword=${encodeURIComponent(keyword)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.length > 0) {
+                                let datalist = document.getElementById('suggestions-datalist');
+                                if (!datalist) {
+                                    datalist = document.createElement('datalist');
+                                    datalist.id = 'suggestions-datalist';
+                                    searchInput.setAttribute('list', 'suggestions-datalist');
+                                    document.body.appendChild(datalist);
+                                }
+                                datalist.innerHTML = data.map(item => 
+                                    `<option value="${item.ten_hang.replace(/"/g, '&quot;')}">`
+                                ).join('');
+                            }
+                        });
+                }, 300);
+            });
+        }
+        
+        // Khởi tạo với bộ lọc mặc định nếu có dữ liệu
+        if (allRows.length > 0) {
+            filterByScore('all');
+        }
+    </script>
+</body>
+</html>
