@@ -1,83 +1,15 @@
+# search_engine.py
 import re
 import math
 import time
 import logging
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import List, Dict, Optional
 from concurrent.futures import ThreadPoolExecutor
 from data import DatabasePool, Cache, EmbeddingModel
+from models import Query, SearchResult, RawData, ScoreCalc
 
 logger = logging.getLogger(__name__)
-
-# ========== MODELS ==========
-@dataclass
-class Query:
-    raw: str
-    normalized: str
-    words: List[str]
-    
-    @classmethod
-    def from_raw(cls, text: str):
-        if not text:
-            return cls("", "", [])
-        norm = re.sub(r"\s+", " ", text.strip().lower())
-        return cls(text, norm, norm.split())
-    @property
-    def word_count(self): return len(self.words)
-    @property
-    def is_short(self): return self.word_count < 12
-    @property
-    def threshold(self):
-        if self.word_count == 1: return 0.2
-        if self.word_count == 2: return 0.25
-        return 0.3
-    @property
-    def fusion_weights(self):
-        return (0.5, 0.5) if self.word_count >= 5 else (0.3, 0.7)
-    @property
-    def candidate_limit(self): return 100 if self.is_short else 300
-    @property
-    def probes(self):
-        return min(25, max(5, self.word_count * 2)) if self.is_short else min(20, max(5, self.word_count))
-
-@dataclass
-class SearchResult:
-    stt: int
-    ten_hang: str
-    thong_so: str
-    gia_tham_dinh: Optional[float]
-    final_score: float
-    
-    def to_dict(self): return self.__dict__
-
-@dataclass
-class RawData:
-    stt: int
-    ten_hang: str
-    thong_so: str
-    gia_tham_dinh: Optional[float]
-    vector_score: float = 0.0
-    bm25_score: float = 0.0
-
-# ========== CALCULATOR ==========
-class ScoreCalc:
-    @staticmethod
-    def softmax(scores):
-        if not scores: return []
-        max_s = max(scores)
-        exp = [math.exp(s - max_s) for s in scores]
-        total = sum(exp)
-        return [e/total if total else 0 for e in exp]
-    @staticmethod
-    def match_boost(cnt): return 1 + min(cnt, 3) * 0.3
-    @staticmethod
-    def idf_boost(cnt): return math.log(1 + cnt) * 0.2
-    @staticmethod
-    def phrase_boost(q, ten): return 0.5 if q.lower() in ten.lower() else 0.0
-    @staticmethod
-    def penalty(ten): return min(len(ten) * 0.0005, 0.1)
-
 # ========== REPOSITORY ==========
 class SearchRepo:
     @staticmethod
@@ -161,11 +93,13 @@ class ShortStrategy(SearchStrategy):
         sum_w = sum(weights)
         for i, w in enumerate(words):
             weight = (weights[i]/sum_w) * 0.6
-            if re.search(rf"\b{re.escape(w)}\b", ten_lower): boost += weight * 1.5
-            elif ten_lower.startswith(w): boost += weight * 1.2
-            elif w in ten_lower: boost += weight
+            if re.search(rf"\b{re.escape(w)}\b", ten_lower): 
+                boost += weight * 1.5
+            elif ten_lower.startswith(w): 
+                boost += weight * 1.2
+            elif w in ten_lower: 
+                boost += weight
         return boost
-
 class LongStrategy(SearchStrategy):
     def search(self, q: Query) -> List[SearchResult]:
         vec = EmbeddingModel.encode(q.normalized)
@@ -194,32 +128,28 @@ class LongStrategy(SearchStrategy):
             score += ScoreCalc.idf_boost(match_cnt)
             score -= ScoreCalc.penalty(item.ten_hang)
             ranked.append(SearchResult(item.stt, item.ten_hang, item.thong_so, item.gia_tham_dinh, score))
-        
         return sorted(ranked, key=lambda x: x.final_score, reverse=True)[:15]
-
+    
 class StrategyFactory:
-    _map = {True: ShortStrategy(), False: LongStrategy()}
+    _map = {True: ShortStrategy(), False: LongStrategy()}  
     @classmethod
-    def get(cls, q): return cls._map[q.is_short]
-
+    def get(cls, q): 
+        return cls._map[q.is_short]
 # ========== SEARCH ENGINE ==========
 class SearchEngine:
     def search(self, raw: str) -> List[SearchResult]:
         if not raw: return []
         q = Query.from_raw(raw)
         key = f"search:{q.normalized}"
-        
         cached = Cache.get(key)
         if cached:
             logger.info(f"✅ Cache: '{raw}'")
             return cached
-        
         start = time.time()
         results = StrategyFactory.get(q).search(q)
         logger.info(f"🔍 '{raw}' | {time.time()-start:.3f}s | {len(results)} results")
         Cache.set(key, results)
         return results
-
 # ========== AUTOCOMPLETE ==========
 class AutocompleteService:
     @staticmethod
@@ -256,7 +186,7 @@ class AutocompleteService:
                             'priority': priority
                         })
                     suggestions.sort(key=lambda x: x['priority'])
-                    return [{'ten_hang': s['ten_hang']} for s in suggestions[:10]]             
+                    return [{'ten_hang': s['ten_hang']} for s in suggestions[:10]]     
         except Exception as e:
             logger.error(f"❌ Autocomplete error: {e}")
             return []
