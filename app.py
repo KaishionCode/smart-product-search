@@ -3,6 +3,7 @@ import logging
 from search_engine import SearchEngine, AutocompleteService
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 logger = logging.getLogger(__name__)
 engine = SearchEngine()
 autocomplete = AutocompleteService()
@@ -26,6 +27,7 @@ def create_app():
     def suggestions():
         return jsonify(autocomplete.suggest(request.args.get('keyword', '')))
     return app
+
 if __name__ == '__main__':
     app = create_app()
     app.run(debug=True, host='0.0.0.0', port=5000)
