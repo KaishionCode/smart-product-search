@@ -10,6 +10,7 @@ from psycopg2.extras import RealDictCursor
 from psycopg2.pool import ThreadedConnectionPool
 from pgvector.psycopg2 import register_vector
 from sentence_transformers import SentenceTransformer
+from models import RawData 
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,6 @@ CACHE_TTL = 60
 # ========== DATABASE ==========
 class DatabasePool:
     _pool = None
-    
     @classmethod
     def get_pool(cls):
         if cls._pool is None:
@@ -49,11 +49,11 @@ class DatabasePool:
             yield cur
         finally:
             cur.close()
-
 # ========== CACHE ==========
 class Cache:
     _cache = {}
     _lock = threading.Lock()
+    
     @classmethod
     def get(cls, key: str):
         with cls._lock:
@@ -61,21 +61,22 @@ class Cache:
             if data and time.time() - data[1] < CACHE_TTL:
                 return data[0]
         return None
+    
     @classmethod
     def set(cls, key: str, value):
         with cls._lock:
             cls._cache[key] = (value, time.time())
-
 # ========== EMBEDDING ==========
 class EmbeddingModel:
     _model = None
+    
     @classmethod
     def get_model(cls):
         if cls._model is None:
             logger.info("--- Loading BGE-M3 ---")
             cls._model = SentenceTransformer('BAAI/bge-m3')
             logger.info("--- Model ready ---")
-        return cls._model
+        return cls._model 
     @classmethod
     @lru_cache(maxsize=1000)
     def encode(cls, text: str) -> List[float]:
